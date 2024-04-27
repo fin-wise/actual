@@ -175,6 +175,7 @@ export function AccountHeader({
               </InitialFocus>
             ) : isNameEditable ? (
               <View
+                onDoubleClick={() => onExposeName(true)}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -189,6 +190,7 @@ export function AccountHeader({
                 }}
               >
                 <View
+                  onDoubleClick={() => onExposeName(true)}
                   style={{
                     fontSize: 25,
                     fontWeight: 500,
