@@ -13,10 +13,8 @@ import {
   type RuleConditionEntity,
   type CategoryGroupEntity,
 } from 'loot-core/src/types/models';
-import {
-  type DataEntity,
-  type GroupedEntity,
-} from 'loot-core/src/types/models/reports';
+import { type DataEntity } from 'loot-core/src/types/models/reports';
+import { type LocalPrefs } from 'loot-core/types/prefs';
 
 import {
   categoryLists,
@@ -43,11 +41,11 @@ export type createCustomSpreadsheetProps = {
   showHiddenCategories: boolean;
   showUncategorized: boolean;
   groupBy?: string;
-  balanceTypeOp?: keyof DataEntity;
+  balanceTypeOp?: 'totalAssets' | 'totalDebts' | 'totalTotals';
   payees?: PayeeEntity[];
   accounts?: AccountEntity[];
   graphType?: string;
-  firstDayOfWeekIdx?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  firstDayOfWeekIdx?: LocalPrefs['firstDayOfWeekIdx'];
   setDataCheck?: (value: boolean) => void;
 };
 
@@ -64,7 +62,7 @@ export function createCustomSpreadsheet({
   showHiddenCategories,
   showUncategorized,
   groupBy,
-  balanceTypeOp,
+  balanceTypeOp = 'totalDebts',
   payees,
   accounts,
   graphType,
@@ -91,7 +89,7 @@ export function createCustomSpreadsheet({
 
   return async (
     spreadsheet: ReturnType<typeof useSpreadsheet>,
-    setData: (data: GroupedEntity) => void,
+    setData: (data: DataEntity) => void,
   ) => {
     if (groupByList.length === 0) {
       return;
@@ -109,7 +107,6 @@ export function createCustomSpreadsheet({
           startDate,
           endDate,
           interval,
-          selectedCategories,
           categoryFilter,
           conditionsOpKey,
           filters,
@@ -121,7 +118,6 @@ export function createCustomSpreadsheet({
           startDate,
           endDate,
           interval,
-          selectedCategories,
           categoryFilter,
           conditionsOpKey,
           filters,
@@ -144,19 +140,13 @@ export function createCustomSpreadsheet({
       });
     }
 
-    const format =
-      ReportOptions.intervalMap.get(interval).toLowerCase() + 'FromDate';
-    const rangeProps =
+    const intervals =
       interval === 'Weekly'
-        ? [
-            monthUtils[format](startDate),
-            monthUtils[format](endDate),
-            firstDayOfWeekIdx,
-          ]
-        : [monthUtils[format](startDate), monthUtils[format](endDate)];
-    const intervals = monthUtils[ReportOptions.intervalRange.get(interval)](
-      ...rangeProps,
-    );
+        ? monthUtils.weekRangeInclusive(startDate, endDate, firstDayOfWeekIdx)
+        : monthUtils[ReportOptions.intervalRange.get(interval)](
+            startDate,
+            endDate,
+          );
 
     let totalAssets = 0;
     let totalDebts = 0;
@@ -215,12 +205,12 @@ export function createCustomSpreadsheet({
       totalDebts += perIntervalDebts;
 
       arr.push({
-        date:
-          interval === 'Monthly'
-            ? // eslint-disable-next-line rulesdir/typography
-              d.format(d.parseISO(`${intervalItem}-01`), "MMM ''yy")
-            : intervalItem,
+        date: d.format(
+          d.parseISO(intervalItem),
+          ReportOptions.intervalFormat.get(interval),
+        ),
         ...stacked,
+        dateStart: intervalItem,
         totalDebts: integerToAmount(perIntervalDebts),
         totalAssets: integerToAmount(perIntervalAssets),
         totalTotals: integerToAmount(perIntervalDebts + perIntervalAssets),

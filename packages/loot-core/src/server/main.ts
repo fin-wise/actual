@@ -15,6 +15,7 @@ import { isNonProductionEnvironment } from '../shared/environment';
 import * as monthUtils from '../shared/months';
 import { q, Query } from '../shared/query';
 import { amountToInteger, stringToInteger } from '../shared/util';
+import { type Budget } from '../types/budget';
 import { Handlers } from '../types/handlers';
 
 import { exportToCSV, exportQueryToCSV } from './accounts/export-to-csv';
@@ -1409,7 +1410,11 @@ handlers['subscribe-needs-bootstrap'] = async function ({
     return { error: res.reason };
   }
 
-  return { bootstrapped: res.data.bootstrapped, hasServer: true };
+  return {
+    bootstrapped: res.data.bootstrapped,
+    loginMethod: res.data.loginMethod || 'password',
+    hasServer: true,
+  };
 };
 
 handlers['subscribe-bootstrap'] = async function ({ password }) {
@@ -1481,17 +1486,27 @@ handlers['subscribe-change-password'] = async function ({ password }) {
   return {};
 };
 
-handlers['subscribe-sign-in'] = async function ({ password }) {
-  const res = await post(getServer().SIGNUP_SERVER + '/login', {
-    password,
-  });
+handlers['subscribe-sign-in'] = async function ({ password, loginMethod }) {
+  if (typeof loginMethod !== 'string' || loginMethod == null) {
+    loginMethod = 'password';
+  }
+  let res;
 
-  if (res.token) {
-    await asyncStorage.setItem('user-token', res.token);
-    return {};
+  try {
+    res = await post(getServer().SIGNUP_SERVER + '/login', {
+      loginMethod,
+      password,
+    });
+  } catch (err) {
+    return { error: err.reason || 'network-failure' };
   }
 
-  return { error: 'invalid-password' };
+  if (!res.token) {
+    throw new Error('login: User token not set');
+  }
+
+  await asyncStorage.setItem('user-token', res.token);
+  return {};
 };
 
 handlers['subscribe-sign-out'] = async function () {
@@ -1576,10 +1591,10 @@ handlers['get-budgets'] = async function () {
           if (name !== DEMO_BUDGET_ID) {
             return {
               id: name,
-              cloudFileId: prefs.cloudFileId,
-              groupId: prefs.groupId,
+              ...(prefs.cloudFileId ? { cloudFileId: prefs.cloudFileId } : {}),
+              ...(prefs.groupId ? { groupId: prefs.groupId } : {}),
               name: prefs.budgetName || '(no name)',
-            };
+            } satisfies Budget;
           }
         }
 

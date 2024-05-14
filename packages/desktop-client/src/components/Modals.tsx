@@ -14,6 +14,7 @@ import { useSyncServerStatus } from '../hooks/useSyncServerStatus';
 import { ModalTitle } from './common/Modal';
 import { AccountAutocompleteModal } from './modals/AccountAutocompleteModal';
 import { AccountMenuModal } from './modals/AccountMenuModal';
+import { BudgetListModal } from './modals/BudgetListModal';
 import { BudgetPageMenuModal } from './modals/BudgetPageMenuModal';
 import { CategoryAutocompleteModal } from './modals/CategoryAutocompleteModal';
 import { CategoryGroupMenuModal } from './modals/CategoryGroupMenuModal';
@@ -23,12 +24,12 @@ import { ConfirmCategoryDelete } from './modals/ConfirmCategoryDelete';
 import { ConfirmTransactionEdit } from './modals/ConfirmTransactionEdit';
 import { ConfirmUnlinkAccount } from './modals/ConfirmUnlinkAccount';
 import { CoverModal } from './modals/CoverModal';
-import { CreateAccount } from './modals/CreateAccount';
-import { CreateEncryptionKey } from './modals/CreateEncryptionKey';
-import { CreateLocalAccount } from './modals/CreateLocalAccount';
+import { CreateAccountModal } from './modals/CreateAccountModal';
+import { CreateEncryptionKeyModal } from './modals/CreateEncryptionKeyModal';
+import { CreateLocalAccountModal } from './modals/CreateLocalAccountModal';
 import { EditField } from './modals/EditField';
 import { EditRule } from './modals/EditRule';
-import { FixEncryptionKey } from './modals/FixEncryptionKey';
+import { FixEncryptionKeyModal } from './modals/FixEncryptionKeyModal';
 import { GoCardlessExternalMsg } from './modals/GoCardlessExternalMsg';
 import { GoCardlessInitialise } from './modals/GoCardlessInitialise';
 import { HoldBufferModal } from './modals/HoldBufferModal';
@@ -36,7 +37,7 @@ import { ImportTransactions } from './modals/ImportTransactions';
 import { LoadBackup } from './modals/LoadBackup';
 import { ManageRulesModal } from './modals/ManageRulesModal';
 import { MergeUnusedPayees } from './modals/MergeUnusedPayees';
-import { Notes } from './modals/Notes';
+import { NotesModal } from './modals/NotesModal';
 import { PayeeAutocompleteModal } from './modals/PayeeAutocompleteModal';
 import { ReportBalanceMenuModal } from './modals/ReportBalanceMenuModal';
 import { ReportBudgetMenuModal } from './modals/ReportBudgetMenuModal';
@@ -105,7 +106,7 @@ export function Modals() {
 
         case 'add-account':
           return (
-            <CreateAccount
+            <CreateAccountModal
               key={name}
               modalProps={modalProps}
               syncServerStatus={syncServerStatus}
@@ -115,7 +116,7 @@ export function Modals() {
 
         case 'add-local-account':
           return (
-            <CreateLocalAccount
+            <CreateLocalAccountModal
               key={name}
               modalProps={modalProps}
               actions={actions}
@@ -251,20 +252,18 @@ export function Modals() {
 
         case 'create-encryption-key':
           return (
-            <CreateEncryptionKey
+            <CreateEncryptionKeyModal
               key={name}
               modalProps={modalProps}
-              actions={actions}
               options={options}
             />
           );
 
         case 'fix-encryption-key':
           return (
-            <FixEncryptionKey
+            <FixEncryptionKeyModal
               key={name}
               modalProps={modalProps}
-              actions={actions}
               options={options}
             />
           );
@@ -288,6 +287,7 @@ export function Modals() {
               autocompleteProps={{
                 value: null,
                 onSelect: options.onSelect,
+                categoryGroups: options.categoryGroups,
                 showHiddenCategories: options.showHiddenCategories,
               }}
               month={options.month}
@@ -500,7 +500,7 @@ export function Modals() {
 
         case 'notes':
           return (
-            <Notes
+            <NotesModal
               key={name}
               modalProps={modalProps}
               id={options.id}
@@ -610,6 +610,7 @@ export function Modals() {
               modalProps={modalProps}
               onAddCategoryGroup={options.onAddCategoryGroup}
               onToggleHiddenCategories={options.onToggleHiddenCategories}
+              onSwitchBudgetFile={options.onSwitchBudgetFile}
               onSwitchBudgetType={options.onSwitchBudgetType}
             />
           );
@@ -643,6 +644,9 @@ export function Modals() {
               />
             </NamespaceContext.Provider>
           );
+
+        case 'budget-list':
+          return <BudgetListModal key={name} modalProps={modalProps} />;
 
         default:
           console.error('Unknown modal:', name);

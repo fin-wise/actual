@@ -17,9 +17,10 @@ import {
   amountToCurrency,
   amountToCurrencyNoDecimal,
 } from 'loot-core/src/shared/util';
-import { type GroupedEntity } from 'loot-core/src/types/models/reports';
+import { type DataEntity } from 'loot-core/src/types/models/reports';
 
 import { usePrivacyMode } from '../../../hooks/usePrivacyMode';
+import { useResponsive } from '../../../ResponsiveProvider';
 import { theme } from '../../../style';
 import { type CSSProperties } from '../../../style';
 import { AlignedText } from '../../common/AlignedText';
@@ -104,14 +105,14 @@ const customLabel = (props, width, end) => {
   const textAnchor = props.index === 0 ? 'left' : 'middle';
   const display =
     props.value !== 0 && `${amountToCurrencyNoDecimal(props.value)}`;
-  const textSize = adjustTextSize(width, 'area');
+  const textSize = adjustTextSize({ sized: width, type: 'area' });
 
   return renderCustomLabel(calcX, calcY, textAnchor, display, textSize);
 };
 
 type AreaGraphProps = {
   style?: CSSProperties;
-  data: GroupedEntity;
+  data: DataEntity;
   balanceTypeOp: string;
   compact?: boolean;
   viewLabels: boolean;
@@ -125,6 +126,7 @@ export function AreaGraph({
   viewLabels,
 }: AreaGraphProps) {
   const privacyMode = usePrivacyMode();
+  const { isNarrowWidth } = useResponsive();
   const dataMax = Math.max(...data.intervalData.map(i => i[balanceTypeOp]));
   const dataMin = Math.min(...data.intervalData.map(i => i[balanceTypeOp]));
 
@@ -211,11 +213,13 @@ export function AreaGraph({
                     tickSize={0}
                   />
                 )}
-                <Tooltip
-                  content={<CustomTooltip balanceTypeOp={balanceTypeOp} />}
-                  formatter={numberFormatterTooltip}
-                  isAnimationActive={false}
-                />
+                {(!isNarrowWidth || !compact) && (
+                  <Tooltip
+                    content={<CustomTooltip balanceTypeOp={balanceTypeOp} />}
+                    formatter={numberFormatterTooltip}
+                    isAnimationActive={false}
+                  />
+                )}
                 <defs>
                   <linearGradient
                     id={`fill${balanceTypeOp}`}
